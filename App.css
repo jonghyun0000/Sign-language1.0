@@ -1,0 +1,603 @@
+/**
+ * App 컴포넌트 스타일 / App component styles
+ */
+
+/* ============================================================
+   레이아웃 / Layout
+   ============================================================ */
+
+.app {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  z-index: 1;
+}
+
+/* ============================================================
+   헤더 / Header
+   ============================================================ */
+
+.app-header {
+  position: sticky;
+  top: 0;
+  background: rgba(10, 10, 15, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--color-border);
+  padding: 16px 24px;
+  z-index: 10;
+}
+
+.app-header-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.app-logo {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: var(--color-accent);
+}
+
+.app-title-group h1 {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--color-text);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.app-subtitle {
+  font-family: var(--font-display);
+  font-size: 11px;
+  color: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-top: 2px;
+}
+
+/* ============================================================
+   메인 / Main
+   ============================================================ */
+
+.app-main {
+  flex: 1;
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.app-grid {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 24px;
+  align-items: stretch;
+}
+
+@media (max-width: 900px) {
+  .app-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.app-grid-camera,
+.app-grid-text {
+  min-height: 400px;
+}
+
+/* ============================================================
+   카메라 프리뷰 / Camera preview
+   ============================================================ */
+
+.camera-preview {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.camera-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-lg), var(--shadow-glow);
+}
+
+.camera-frame::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.camera-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* 거울처럼 좌우 반전 / Mirror flip horizontally */
+  transform: scaleX(-1);
+}
+
+.camera-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.camera-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background: rgba(10, 10, 15, 0.9);
+  backdrop-filter: blur(8px);
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ============================================================
+   텍스트 출력 / Text output
+   ============================================================ */
+
+.text-output {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.text-output-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+}
+
+.text-output-header h2 {
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.text-output-content {
+  flex: 1;
+  padding: 24px 20px;
+  overflow-y: auto;
+  min-height: 200px;
+  display: flex;
+  align-items: flex-start;
+}
+
+.recognized-text {
+  font-size: 32px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--color-text);
+  word-break: break-all;
+  letter-spacing: -0.01em;
+}
+
+.pending-gesture {
+  color: var(--color-accent);
+  opacity: 0.6;
+  font-weight: 400;
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+.placeholder-text {
+  font-size: 15px;
+  color: var(--color-muted);
+  line-height: 1.6;
+}
+
+.text-output-footer {
+  padding: 12px 20px;
+  border-top: 1px solid var(--color-border);
+  font-size: 12px;
+  color: var(--color-muted);
+}
+
+.text-count {
+  font-family: var(--font-mono);
+}
+
+/* ============================================================
+   하단 영역 / Bottom area
+   ============================================================ */
+
+.app-bottom {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 24px;
+  align-items: center;
+  padding: 20px 24px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+@media (max-width: 768px) {
+  .app-bottom {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============================================================
+   신뢰도 인디케이터 / Confidence indicator
+   ============================================================ */
+
+.confidence-indicator {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 24px;
+  align-items: center;
+}
+
+@media (max-width: 600px) {
+  .confidence-indicator {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+.gesture-display {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 140px;
+}
+
+.gesture-display-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.gesture-display-value {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.gesture-character {
+  font-size: 36px;
+  font-weight: 600;
+  color: var(--color-accent);
+  font-family: var(--font-sans);
+  letter-spacing: -0.02em;
+  text-shadow: 0 0 20px rgba(6, 182, 212, 0.3);
+}
+
+.gesture-type {
+  font-size: 11px;
+  padding: 3px 8px;
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  color: var(--color-text-secondary);
+  letter-spacing: 0.05em;
+}
+
+.gesture-empty {
+  font-size: 22px;
+  color: var(--color-muted);
+  font-style: italic;
+}
+
+.confidence-bar-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.confidence-bar-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.confidence-percentage {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.confidence-bar-track {
+  height: 8px;
+  background: var(--color-bg-tertiary);
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+}
+
+.confidence-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.2s ease-out, background-color 0.2s ease-out;
+  box-shadow: 0 0 12px currentColor;
+}
+
+/* ============================================================
+   버튼 / Buttons
+   ============================================================ */
+
+.app-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-tertiary);
+  color: var(--color-text);
+  transition: all 0.15s ease-out;
+  white-space: nowrap;
+}
+
+.btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-speak {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-bg);
+  font-weight: 600;
+}
+
+.btn-speak:hover:not(:disabled) {
+  background: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
+  box-shadow: 0 4px 16px rgba(6, 182, 212, 0.35);
+}
+
+.btn-speak--active {
+  background: var(--color-secondary);
+  border-color: var(--color-secondary);
+  animation: pulse-bg 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-bg {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(249, 115, 22, 0); }
+}
+
+.btn-reset:hover:not(:disabled) {
+  border-color: var(--color-secondary);
+  color: var(--color-secondary);
+}
+
+.btn-retry {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-bg);
+  margin-top: 12px;
+}
+
+/* ============================================================
+   에러 메시지 / Error message
+   ============================================================ */
+
+.error-message {
+  display: flex;
+  gap: 16px;
+  padding: 20px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: var(--radius-lg);
+}
+
+.error-message-icon {
+  color: var(--color-danger);
+  flex-shrink: 0;
+}
+
+.error-message-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-danger);
+  margin-bottom: 6px;
+}
+
+.error-message-body {
+  font-size: 14px;
+  color: var(--color-text);
+  margin-bottom: 6px;
+}
+
+.error-message-solution {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+}
+
+/* ============================================================
+   제스처 가이드 / Gesture guide
+   ============================================================ */
+
+.gesture-guide {
+  position: relative;
+}
+
+.gesture-guide-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-secondary);
+  transition: all 0.15s ease-out;
+}
+
+.gesture-guide-toggle:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.gesture-guide-content {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: min(380px, calc(100vw - 32px));
+  max-height: 60vh;
+  overflow-y: auto;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow-lg);
+  z-index: 20;
+  animation: fadeInDown 0.2s ease-out;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.gesture-guide-section {
+  margin-bottom: 16px;
+}
+
+.gesture-guide-section h4 {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-muted);
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.gesture-guide-section ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.gesture-guide-section li {
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 8px 10px;
+  background: var(--color-bg-tertiary);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+}
+
+.gesture-guide-section li strong {
+  color: var(--color-accent);
+  font-size: 18px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.gesture-guide-section li span {
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+
+.gesture-guide-note {
+  font-size: 12px;
+  color: var(--color-muted);
+  line-height: 1.6;
+  padding: 12px;
+  background: var(--color-bg-tertiary);
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--color-warning);
+}
+
+/* ============================================================
+   푸터 / Footer
+   ============================================================ */
+
+.app-footer {
+  text-align: center;
+  padding: 20px;
+  font-size: 12px;
+  color: var(--color-muted);
+  border-top: 1px solid var(--color-border);
+  font-family: var(--font-display);
+  letter-spacing: 0.02em;
+}
