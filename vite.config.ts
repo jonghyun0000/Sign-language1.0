@@ -1,16 +1,12 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-// https://vitejs.dev/config/
+// Vite config — keeps things simple. MediaPipe loads its WASM/model from a CDN
+// at runtime, so we don't need to bundle the heavy assets ourselves.
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 5173,
-    // 카메라 권한은 HTTPS 또는 localhost에서만 작동합니다.
-    // Camera permissions only work on HTTPS or localhost.
     host: true,
-  },
-  optimizeDeps: {
-    exclude: ['@mediapipe/tasks-vision'],
+    port: 5173,
   },
 });

@@ -1,0 +1,26 @@
+/* Reset & base styling */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: 'Noto Sans KR', 'Pretendard', -apple-system, BlinkMacSystemFont,
+    'Segoe UI', Roboto, sans-serif;
+  color: #e2e8f0;
+  background: radial-gradient(circle at 20% 20%, #1a202c 0%, #0a0f1a 70%);
+  min-height: 100%;
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font-family: inherit;
+}

@@ -1,26 +1,28 @@
 {
-  "name": "korean-sign-language-recognition",
+  "name": "korean-sign-language-recognizer",
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "실시간 한국 수어 인식 웹 애플리케이션 (Real-time Korean Sign Language Recognition)",
+  "description": "Real-time Korean sign language recognition in the browser using MediaPipe Hands and a rule-based classifier.",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "verify": "tsx scripts/verify.ts",
+    "confusion": "tsx scripts/confusion.ts"
   },
   "dependencies": {
     "@mediapipe/tasks-vision": "^0.10.14",
-    "lucide-react": "^0.460.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "@types/react": "^18.3.12",
-    "@types/react-dom": "^18.3.1",
-    "@vitejs/plugin-react": "^4.3.3",
-    "typescript": "^5.6.3",
-    "vite": "^5.4.10"
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "tsx": "^4.23.12",
+    "typescript": "^5.5.3",
+    "vite": "^5.3.4"
   }
 }
