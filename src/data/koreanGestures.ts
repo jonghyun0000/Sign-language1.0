@@ -54,6 +54,7 @@ import {
   horizontality,
   jointAngle,
   thumbIndexPinch,
+  thumbMiddlePinch,
 } from '../utils/landmarkUtils';
 
 /** 제스처 규칙 하나. */
@@ -109,33 +110,53 @@ function fingerPatternScore(
  */
 function handshapeScore(lm: HandLandmarks, hs: Handshape): number {
   const flex = getFingerFlexions(lm);
-  let matched = 0;
   const keys = ['thumb', 'index', 'middle', 'ring', 'pinky'] as const;
 
-  for (const key of keys) {
-    const wantExtended = hs.fingers[key];
+  // 펴야 하는 손가락과 접어야 하는 손가락을 나눠 셉니다.
+  const extendKeys = keys.filter((k) => hs.fingers[k]);
+  const curlKeys = keys.filter((k) => !hs.fingers[k]);
+
+  let extendScore = 0;
+  for (const key of extendKeys) {
     const want = hs.knuckles?.[key];
     const actual = flex[key];
-
-    if (!wantExtended) {
-      // 접혀 있어야 하는 손가락.
-      if (actual === 'curled') matched += 1;
-      // 살짝 굽은 정도는 절반만 인정합니다.
-      else if (actual === 'bent') matched += 0.4;
-      continue;
-    }
-
-    // 펴야 하는 손가락.
     if (want === 'bent' || want === 'ring') {
-      // 첫마디만 펴는 수형: bent 가 정답, extended 도 어느 정도 인정.
-      if (actual === 'bent') matched += 1;
-      else if (actual === 'extended') matched += 0.6;
+      // 첫마디만 펴는 수형: bent 가 정답, 완전히 편 것도 어느 정도 인정.
+      if (actual === 'bent') extendScore += 1;
+      else if (actual === 'extended') extendScore += 0.6;
     } else {
-      if (actual === 'extended') matched += 1;
-      else if (actual === 'bent') matched += 0.5;
+      if (actual === 'extended') extendScore += 1;
+      else if (actual === 'bent') extendScore += 0.5;
     }
   }
-  return matched / keys.length;
+
+  let curlScore = 0;
+  for (const key of curlKeys) {
+    const actual = flex[key];
+    if (actual === 'curled') curlScore += 1;
+    else if (actual === 'bent') curlScore += 0.4;
+  }
+
+  // 가중치를 다르게 둡니다.
+  //
+  // ⚠️ 예전에는 손가락 5개를 똑같이 셌습니다. 그러면 ㅎ(엄지만 폄)을 연습할 때
+  // **주먹을 쥐어도 0.8점**이 나옵니다. 엄지 하나만 틀렸고 나머지 넷은
+  // "접혀 있어야 한다"를 만족하니까요. 그래서 주먹이 ㅎ로 인식되고, 배우기
+  // 모드는 "좋아요!"라고 칭찬까지 했습니다. (배우기 모드 테스트로 발견)
+  //
+  // 수형을 결정하는 것은 "무엇을 폈는가"입니다. 그래서 펴야 하는 손가락에
+  // 더 큰 비중을 둡니다. 이제 주먹으로 ㅎ를 시도하면 0.4점에 그칩니다.
+  const EXTEND_WEIGHT = 0.65;
+  const CURL_WEIGHT = 0.35;
+
+  // 한쪽이 아예 없으면(예: 주먹은 편 손가락이 0개) 남은 쪽이 전부를 가집니다.
+  if (extendKeys.length === 0) return curlScore / curlKeys.length;
+  if (curlKeys.length === 0) return extendScore / extendKeys.length;
+
+  return (
+    (extendScore / extendKeys.length) * EXTEND_WEIGHT +
+    (curlScore / curlKeys.length) * CURL_WEIGHT
+  );
 }
 
 /** 검지와 중지 손끝 사이 간격 (손 크기로 정규화). */
@@ -358,13 +379,16 @@ const CONSONANT_RULES: GestureRule[] = [
     label: 'ㅎ',
     category: 'consonant',
     handshape: C.hHieut,
-    direction: 'up',
-    hint: '엄지만 위로 세우기',
+    // 방향 조건을 일부러 넣지 않습니다.
+    // 자료는 히읗형을 "1지만 완전히 폄"으로만 정의하며 방향은 규정하지
+    // 않습니다. 한때 제가 "엄지가 위를 향해야 한다"는 조건을 임의로 넣었다가
+    // 엄지 각도가 조금만 틀어져도 ㅎ가 인식되지 않는 문제가 생겼습니다.
+    // 자료에 없는 조건은 넣지 않는 편이 정확합니다.
+    hint: '엄지만 펴기 (나머지 네 손가락은 접기)',
     meaning: "히읗. '하·호·학'의 첫소리",
     confidence: 'verified',
     rationale:
       '수형 이름 자체가 "히읗형"이고 정의가 "1지만 완전히 폄"입니다. 이 프로젝트에서 유일하게 자료로 직접 확인된 대응입니다.',
-    directionFinger: 'thumb',
   }),
 ];
 
@@ -553,25 +577,21 @@ const WORD_RULES: GestureRule[] = [
   }),
   shortcut({
     label: '감사합니다',
-    fingers: { thumb: true, index: false, middle: false, ring: false, pinky: false },
-    direction: 'up',
-    hint: '엄지 척 (엄지만 위로)',
+    fingers: { thumb: true, index: false, middle: false, ring: false, pinky: true },
+    hint: '엄지와 새끼손가락 펴기',
     meaning: '고마움을 전할 때',
-    score: (lm) => {
-      // 주의: ㅎ(히읗형)과 손 모양이 같습니다. 사전 모드로 구분해야 합니다.
-      const pattern = fingerPatternScore(getFingerState(lm), {
+    // 예전에는 "엄지 척"이었는데, 그건 ㅎ(히읗형 = 엄지만 폄)과 손 모양이
+    // 완전히 같아서 둘 중 하나만 인식될 수밖에 없었습니다. ㅎ는 이 앱에서
+    // 유일하게 자료로 확인된 자모라 옮길 수 없으므로, 단어 쪽을 비어 있는
+    // 손 모양으로 옮겼습니다.
+    score: (lm) =>
+      fingerPatternScore(getFingerState(lm), {
         thumb: true,
         index: false,
         middle: false,
         ring: false,
-        pinky: false,
-      });
-      const up = directionScore(
-        fingerDirection(lm, LM.THUMB_MCP, LM.THUMB_TIP),
-        'up',
-      );
-      return pattern * 0.65 + up * 0.35;
-    },
+        pinky: true,
+      }),
   }),
   shortcut({
     label: '사랑합니다',
@@ -589,38 +609,34 @@ const WORD_RULES: GestureRule[] = [
   }),
   shortcut({
     label: '도와주세요',
-    fingers: { thumb: false, index: true, middle: false, ring: false, pinky: false },
-    direction: 'up',
-    hint: '검지를 곧게 위로 세우기',
+    fingers: { thumb: true, index: true, middle: true, ring: true, pinky: false },
+    hint: '새끼손가락만 접고 나머지 네 손가락 펴기',
     meaning: '도움을 요청할 때',
-    score: (lm) => {
-      // 주의: 모음 ㅗ와 손 모양·방향이 같습니다.
-      const pattern = fingerPatternScore(getFingerState(lm), {
-        thumb: false,
+    // 예전에는 "검지를 위로"였는데, 모음 ㅗ(1형 + 위)와 완전히 같았습니다.
+    // 새끼만 접는 모양(8형)은 어떤 자모도 쓰지 않아 충돌이 없습니다.
+    score: (lm) =>
+      fingerPatternScore(getFingerState(lm), {
+        thumb: true,
         index: true,
-        middle: false,
-        ring: false,
+        middle: true,
+        ring: true,
         pinky: false,
-      });
-      return (
-        pattern * 0.4 +
-        directionScore(indexDirection(lm), 'up') * 0.4 +
-        indexStraightness(lm) * 0.2
-      );
-    },
+      }),
   }),
   shortcut({
     label: '괜찮아요',
-    fingers: { thumb: false, index: false, middle: true, ring: true, pinky: true },
-    hint: 'OK 사인 (동그라미 + 세 손가락 펴기)',
+    fingers: { thumb: false, index: true, middle: false, ring: true, pinky: true },
+    hint: '엄지와 중지를 맞대고 나머지는 펴기',
     meaning: '문제없다고 답할 때',
-    shapeExtra: { pinch: 'index' },
+    shapeExtra: { pinch: 'middle' },
+    // 예전에는 엄지+검지 OK 사인이었는데, ㅇ(10형 = 엄지+검지 고리)과
+    // 사실상 같았습니다. 고리를 만드는 손가락을 중지로 바꿔 구분합니다.
     score: (lm) => {
-      // 주의: ㅇ(10형)과 사실상 같은 손 모양입니다.
       const f = getFingerState(lm);
-      const pinched = b(thumbIndexPinch(lm));
-      const others = f.middle && f.ring && f.pinky ? 1 : 0;
-      return pinched * 0.5 + others * 0.5;
+      // 엄지+중지가 붙고, 엄지+검지는 떨어져 있어야 ㅇ과 구분됩니다.
+      const pinched = b(thumbMiddlePinch(lm)) * b(!thumbIndexPinch(lm));
+      const others = f.index && f.ring && f.pinky ? 1 : 0;
+      return pinched * 0.6 + others * 0.4;
     },
   }),
 ];

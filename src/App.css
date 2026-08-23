@@ -1293,3 +1293,560 @@
   height: 8px;
   border-radius: 50%;
 }
+
+/* =============================================================================
+   수어 배우기 모드
+   ============================================================================= */
+
+.learn {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 16px;
+  overflow-y: auto;
+}
+
+.learn__title {
+  margin: 0;
+  font-size: 20px;
+  color: #f1f5f9;
+}
+
+.learn__subtitle {
+  margin: 6px 0 0;
+  font-size: 13px;
+  line-height: 1.65;
+  color: #94a3b8;
+  max-width: 60ch;
+}
+
+/* --- 전체 진도 --- */
+
+.learn__progress {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(129, 140, 248, 0.3);
+  border-radius: 12px;
+}
+
+.learn__progress-head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #c7d2fe;
+}
+
+.learn__progress-head strong {
+  color: #e0e7ff;
+  font-size: 15px;
+}
+
+.learn__progress-track {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.6);
+  overflow: hidden;
+}
+
+.learn__progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #6366f1, #8b5cf6);
+  transition: width 0.3s ease;
+}
+
+.learn__reset {
+  align-self: flex-start;
+  background: transparent;
+  border: 0;
+  color: #94a3b8;
+  font-size: 11px;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}
+
+/* --- 레슨 목록 --- */
+
+.learn__lessons {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  counter-reset: lesson;
+}
+
+.lesson-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: rgba(30, 41, 59, 0.55);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.1s ease;
+}
+
+.lesson-item:not(:disabled):hover {
+  background: rgba(30, 41, 59, 0.85);
+  border-color: #818cf8;
+  transform: translateX(3px);
+}
+
+.lesson-item--done {
+  border-color: rgba(74, 222, 128, 0.4);
+  background: rgba(34, 197, 94, 0.08);
+}
+
+.lesson-item--locked {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.lesson-item__no {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(99, 102, 241, 0.25);
+  color: #c7d2fe;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.lesson-item--done .lesson-item__no {
+  background: rgba(34, 197, 94, 0.25);
+  color: #86efac;
+}
+
+.lesson-item__text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  flex: 1;
+}
+
+.lesson-item__text strong {
+  font-size: 15px;
+  color: #f1f5f9;
+}
+
+.lesson-item__sub {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.lesson-item__shapes {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.lesson-item__more {
+  font-size: 11px;
+  color: #64748b;
+  margin-left: 2px;
+}
+
+.lesson-item__count {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: #94a3b8;
+  min-width: 34px;
+  text-align: right;
+}
+
+.learn__note {
+  margin-top: auto;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(234, 179, 8, 0.1);
+  border: 1px solid rgba(250, 204, 21, 0.3);
+  font-size: 12px;
+  line-height: 1.7;
+  color: #fde68a;
+}
+
+/* --- 레슨 진행 화면 --- */
+
+.lesson-header {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.lesson-header__back {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  color: #cbd5e1;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.lesson-header__back:hover {
+  background: rgba(148, 163, 184, 0.12);
+}
+
+.lesson-intro {
+  padding: 18px 20px;
+  border-radius: 12px;
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.lesson-intro h3 {
+  margin: 0 0 12px;
+  font-size: 17px;
+  color: #f1f5f9;
+}
+
+.lesson-intro p {
+  margin: 0 0 12px;
+  font-size: 14px;
+  line-height: 1.85;
+  color: #cbd5e1;
+}
+
+.lesson-intro p:last-child {
+  margin-bottom: 0;
+}
+
+.lesson-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+/* --- 단계 표시 --- */
+
+.lesson-steps {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.lesson-steps__dot {
+  min-width: 34px;
+  padding: 5px 9px;
+  border-radius: 8px;
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  color: #64748b;
+  font-size: 14px;
+  text-align: center;
+}
+
+.lesson-steps__dot--current {
+  background: rgba(99, 102, 241, 0.25);
+  border-color: #818cf8;
+  color: #e0e7ff;
+  font-weight: 700;
+}
+
+.lesson-steps__dot--done {
+  background: rgba(34, 197, 94, 0.18);
+  border-color: rgba(74, 222, 128, 0.45);
+  color: #86efac;
+}
+
+/* --- 연습 화면 --- */
+
+.practice {
+  display: grid;
+  grid-template-columns: minmax(180px, 240px) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.practice__target {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 18px;
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.practice__label {
+  font-size: 44px;
+  font-weight: 700;
+  line-height: 1;
+  color: #f8fafc;
+}
+
+.practice__how {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #cbd5e1;
+  text-align: center;
+}
+
+.practice__confidence {
+  font-size: 10.5px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.practice__confidence--verified {
+  background: rgba(34, 197, 94, 0.15);
+  color: #86efac;
+}
+
+.practice__confidence--inferred {
+  background: rgba(234, 179, 8, 0.13);
+  color: #fde047;
+}
+
+.practice__confidence--invented {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+}
+
+.practice__coach {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* --- 교정 안내 (가장 중요한 UI) --- */
+
+.coach-hint {
+  padding: 16px 18px;
+  border-radius: 12px;
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 1.5;
+  text-align: center;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.coach-hint--idle {
+  background: rgba(148, 163, 184, 0.1);
+  color: #94a3b8;
+}
+
+.coach-hint--adjusting {
+  background: rgba(234, 179, 8, 0.12);
+  color: #fde047;
+}
+
+.coach-hint--close {
+  background: rgba(59, 130, 246, 0.15);
+  color: #93c5fd;
+}
+
+.coach-hint--success {
+  background: rgba(34, 197, 94, 0.2);
+  color: #86efac;
+}
+
+.coach-hold {
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.15);
+  overflow: hidden;
+}
+
+.coach-hold__fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #22c55e, #4ade80);
+  transition: width 0.1s linear;
+}
+
+/* --- 손가락별 상태 --- */
+
+.coach-fingers {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+
+.coach-fingers__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 8px 4px;
+  border-radius: 9px;
+  border: 1px solid transparent;
+  font-size: 11px;
+}
+
+.coach-fingers__item--ok {
+  background: rgba(34, 197, 94, 0.12);
+  border-color: rgba(74, 222, 128, 0.35);
+  color: #86efac;
+}
+
+.coach-fingers__item--should-extend,
+.coach-fingers__item--should-curl {
+  background: rgba(234, 179, 8, 0.12);
+  border-color: rgba(250, 204, 21, 0.35);
+  color: #fde047;
+}
+
+.coach-fingers__name {
+  color: #cbd5e1;
+  font-size: 11px;
+}
+
+.coach-fingers__state {
+  font-weight: 700;
+}
+
+.coach-direction {
+  padding: 8px 12px;
+  border-radius: 9px;
+  font-size: 12.5px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.coach-direction--ok {
+  background: rgba(34, 197, 94, 0.12);
+  color: #86efac;
+}
+
+.coach-direction--wrong {
+  background: rgba(234, 179, 8, 0.12);
+  color: #fde047;
+}
+
+.practice__tip {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 9px;
+  background: rgba(148, 163, 184, 0.08);
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: #cbd5e1;
+}
+
+.practice__warning {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 9px;
+  background: rgba(234, 179, 8, 0.1);
+  border: 1px solid rgba(250, 204, 21, 0.28);
+  font-size: 11.5px;
+  line-height: 1.65;
+  color: #fde68a;
+}
+
+/* --- 레슨 완료 --- */
+
+.lesson-complete {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 36px 20px;
+  border-radius: 14px;
+  background: rgba(34, 197, 94, 0.08);
+  border: 1px solid rgba(74, 222, 128, 0.3);
+  text-align: center;
+}
+
+.lesson-complete__mark {
+  width: 70px;
+  height: 70px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(34, 197, 94, 0.2);
+  color: #4ade80;
+}
+
+.lesson-complete h3 {
+  margin: 0;
+  font-size: 21px;
+  color: #f1f5f9;
+}
+
+.lesson-complete p {
+  margin: 0;
+  font-size: 14px;
+  color: #cbd5e1;
+}
+
+.lesson-complete__goal {
+  padding: 10px 18px;
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.5);
+}
+
+.lesson-complete__goal strong {
+  font-size: 22px;
+  color: #86efac;
+}
+
+@media (max-width: 1000px) {
+  .practice {
+    grid-template-columns: 1fr;
+  }
+
+  .practice__target {
+    flex-direction: row;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+}
+
+/* 카메라가 없어 연습할 수 없을 때 */
+.coach-hint--blocked {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(248, 113, 113, 0.35);
+  color: #fca5a5;
+}
+
+.coach-hint__sub {
+  font-size: 12.5px;
+  font-weight: 400;
+  line-height: 1.7;
+  color: #fecaca;
+  opacity: 0.9;
+}
+
+/* 손이 안 보여 판정할 수 없는 손가락 */
+.coach-fingers__item--unknown {
+  background: rgba(148, 163, 184, 0.08);
+  border-color: rgba(148, 163, 184, 0.2);
+  color: #64748b;
+}

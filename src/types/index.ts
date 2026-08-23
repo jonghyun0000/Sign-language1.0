@@ -55,7 +55,7 @@ export interface GesturePrediction {
 export type DictionaryMode = 'smart' | 'consonant' | 'vowel' | 'word' | 'all';
 
 /** 앱의 최상위 모드. */
-export type AppMode = 'translate' | 'effect' | 'guide';
+export type AppMode = 'learn' | 'translate' | 'effect' | 'guide';
 
 /** 저장된 대화 기록 한 줄. */
 export interface HistoryEntry {

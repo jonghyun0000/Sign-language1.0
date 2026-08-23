@@ -24,6 +24,7 @@ import { ErrorMessage } from './components/ErrorMessage';
 import { HistoryPanel } from './components/HistoryPanel';
 import { KoreanTextOutput } from './components/KoreanTextOutput';
 import { GuidePage } from './components/GuidePage';
+import { LearnPage } from './components/LearnPage';
 import { ModeSelector } from './components/ModeSelector';
 import { ResetButton } from './components/ResetButton';
 import { SpeechButton } from './components/SpeechButton';
@@ -38,11 +39,13 @@ import { HandShape } from './components/HandShape';
 
 import { EffectManager, getEffectCatalog } from './effects/EffectManager';
 import { EffectGestureDetector } from './services/EffectGestureDetector';
+import { CoachService, type CoachFeedback } from './services/CoachService';
 import { GestureClassifier } from './services/GestureClassifier';
 import { SoundService } from './services/SoundService';
 import { TextToSpeechService } from './services/TextToSpeechService';
 import { HangulComposer } from './utils/hangulComposer';
 import { useHistory } from './hooks/useHistory';
+import { useLearningProgress } from './hooks/useLearningProgress';
 import { GESTURE_RULES } from './data/koreanGestures';
 
 import type {
@@ -82,6 +85,9 @@ export default function App() {
   const soundRef = useRef<SoundService>();
   if (!soundRef.current) soundRef.current = new SoundService();
 
+  const coachRef = useRef<CoachService>();
+  if (!coachRef.current) coachRef.current = new CoachService();
+
   const detectorRef = useRef<EffectGestureDetector>();
   if (!detectorRef.current) detectorRef.current = new EffectGestureDetector();
 
@@ -96,7 +102,9 @@ export default function App() {
   // ---------------------------------------------------------------------------
   // UI 상태
   // ---------------------------------------------------------------------------
-  const [mode, setMode] = useState<AppMode>('translate');
+  // 기본 화면을 '배우기'로 둡니다. 수어를 모르는 사람이 처음 열었을 때
+  // 빈 번역 화면을 보면 무엇을 해야 할지 알 수 없기 때문입니다.
+  const [mode, setMode] = useState<AppMode>('learn');
   const [dictionary, setDictionary] = useState<DictionaryMode>('smart');
   const [text, setText] = useState('');
   const [composing, setComposing] = useState(false);
@@ -117,7 +125,30 @@ export default function App() {
   const [speaking, setSpeaking] = useState(false);
   const [soundOn, setSoundOn] = useState(true);
 
+  /** 배우기 모드에서 코치가 계산한 결과. */
+  const [coachFeedback, setCoachFeedback] = useState<CoachFeedback>({
+    passed: false,
+    score: 0,
+    hint: '연습할 글자를 골라주세요',
+    tone: 'idle',
+    // 아직 손을 본 적이 없으므로 'unknown' 으로 시작합니다.
+    // 'ok' 로 두면 카메라가 켜지기도 전에 손가락이 전부 "좋아요"로 보여서
+    // "다 맞는데 왜 안 넘어가지?" 하고 헤매게 됩니다.
+    fingers: {
+      thumb: 'unknown',
+      index: 'unknown',
+      middle: 'unknown',
+      ring: 'unknown',
+      pinky: 'unknown',
+    },
+    direction: 'none',
+    holdProgress: 0,
+  });
+  /** 코치에게 프레임 간격을 주기 위한 시각 기록. */
+  const lastCoachTimeRef = useRef(0);
+
   const history = useHistory();
+  const learning = useLearningProgress();
   const ttsSupported = useMemo(() => TextToSpeechService.isSupported(), []);
 
   // 프레임 콜백 안에서 최신 모드를 읽기 위한 ref.
@@ -151,6 +182,9 @@ export default function App() {
       setActiveEffect(null);
       setEffectConfidence(0);
     }
+
+    // 배우기 모드를 벗어나면 연습을 멈춥니다.
+    if (mode !== 'learn') coachRef.current?.setTarget(null);
   }, [mode]);
 
   // ---------------------------------------------------------------------------
@@ -184,6 +218,36 @@ export default function App() {
   // ---------------------------------------------------------------------------
   const handleFrame = useCallback((frame: HandFrameResult, fit: CoverFit) => {
     setHandVisible(frame.hands.length > 0);
+
+    // --- 배우기 모드 ---
+    // 번역이나 이펙트와 달리, 코치가 "목표 손 모양과 얼마나 다른지"를
+    // 계산해서 무엇을 고쳐야 하는지 알려줍니다.
+    if (modeRef.current === 'learn') {
+      const now = frame.timestampMs;
+      const dt = lastCoachTimeRef.current
+        ? Math.min(0.2, (now - lastCoachTimeRef.current) / 1000)
+        : 1 / 30;
+      lastCoachTimeRef.current = now;
+
+      const next = coachRef.current?.update(frame.hands, dt);
+      if (next) {
+        // 값이 실제로 바뀔 때만 상태를 갱신해 불필요한 렌더링을 줄입니다.
+        setCoachFeedback((prev) =>
+          prev.hint === next.hint &&
+          prev.passed === next.passed &&
+          Math.abs(prev.holdProgress - next.holdProgress) < 0.03 &&
+          prev.direction === next.direction &&
+          prev.fingers.thumb === next.fingers.thumb &&
+          prev.fingers.index === next.fingers.index &&
+          prev.fingers.middle === next.fingers.middle &&
+          prev.fingers.ring === next.fingers.ring &&
+          prev.fingers.pinky === next.fingers.pinky
+            ? prev
+            : next,
+        );
+      }
+      return;
+    }
 
     // --- 이펙트 모드 ---
     if (modeRef.current === 'effect') {
@@ -362,7 +426,12 @@ export default function App() {
   // ---------------------------------------------------------------------------
   const isEffectMode = mode === 'effect';
   const isGuideMode = mode === 'guide';
-  const confidence = isEffectMode ? effectConfidence : livePrediction.confidence;
+  const isLearnMode = mode === 'learn';
+  const confidence = isEffectMode
+    ? effectConfidence
+    : isLearnMode
+      ? coachFeedback.score
+      : livePrediction.confidence;
   const effectInfo = activeEffect ? EFFECT_INFO.get(activeEffect) ?? null : null;
 
   return (
@@ -383,7 +452,7 @@ export default function App() {
         onRetry={handleRetry}
       />
 
-      <main className={`app__main ${isGuideMode ? 'app__main--guide' : ''}`}>
+      <main className={`app__main ${isGuideMode || isLearnMode ? 'app__main--guide' : ''}`}>
         {/* 카메라는 모드가 바뀌어도 계속 마운트해 둡니다.
             언마운트하면 카메라가 껐다 켜지면서 몇 초씩 멈추기 때문입니다.
             사전 모드에서는 작게 줄여 "연습용 창"으로 씁니다. */}
@@ -409,13 +478,27 @@ export default function App() {
             <div className="app__loading">카메라와 모델을 불러오는 중…</div>
           )}
 
-          {isGuideMode && (
-            <div className="app__practice-badge">연습 모드</div>
+          {(isGuideMode || isLearnMode) && (
+            <div className="app__practice-badge">
+              {isLearnMode ? '연습 중' : '연습 모드'}
+            </div>
           )}
         </section>
 
         <aside className="app__side">
-          {isGuideMode ? (
+          {isLearnMode ? (
+            <LearnPage
+              feedback={coachFeedback}
+              onTargetChange={(label) => coachRef.current?.setTarget(label)}
+              onResetCoach={() => coachRef.current?.reset()}
+              onTargetMastered={learning.markTarget}
+              onLessonComplete={learning.markLesson}
+              isLessonDone={learning.isLessonDone}
+              isTargetDone={learning.isTargetDone}
+              onResetProgress={learning.resetAll}
+              cameraReady={ready && !error}
+            />
+          ) : isGuideMode ? (
             <GuidePage
               liveLabel={livePrediction.label}
               liveEffect={activeEffect}
@@ -445,7 +528,7 @@ export default function App() {
         <ConfidenceIndicator confidence={confidence} />
 
         <div className="app__buttons">
-          {isEffectMode ? (
+          {isLearnMode ? null : isEffectMode ? (
             <>
               <button
                 type="button"
@@ -461,6 +544,10 @@ export default function App() {
           ) : isGuideMode ? (
             <p className="app__guide-tip">
               카메라 앞에서 손 모양을 만들어 보세요. 인식되는 카드가 강조됩니다.
+            </p>
+          ) : isLearnMode ? (
+            <p className="app__guide-tip">
+              오른쪽 안내를 보며 손 모양을 만들어 보세요.
             </p>
           ) : (
             <>
@@ -506,7 +593,7 @@ export default function App() {
         </div>
       </footer>
 
-      {isEffectMode ? (
+      {isLearnMode ? null : isEffectMode ? (
         <section className="app__hint">
           <details>
             <summary>이펙트 모드 사용 팁</summary>

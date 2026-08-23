@@ -21,6 +21,8 @@ import { GESTURE_RULES } from '../src/data/koreanGestures';
 import { getEffectCatalog } from '../src/effects/EffectManager';
 import { TWO_HAND_UPGRADE, isScreenWideEffect } from '../src/types';
 import { buildHandFromShape } from './confusion';
+import { CoachService } from '../src/services/CoachService';
+import { LESSONS, totalPracticeSteps } from '../src/data/lessons';
 import type { HandLandmarks, Landmark } from '../src/types';
 
 // -----------------------------------------------------------------------------
@@ -318,6 +320,25 @@ section('2. 제스처 분류기 (classifyHand)');
     check(`아래를 향하는 ${label} 인식 (회귀 방지)`, result.label, label);
   }
 
+  // --- 단어가 기본(스마트) 모드에서 인식되는지 (회귀 방지) ---
+  //
+  // 한때 단어 손 모양이 자모와 완전히 겹쳐서(감사합니다 ≡ ㅎ 등) 스마트
+  // 모드에서 단어를 빼버린 적이 있습니다. 그 결과 기본 설정으로는 인사말이
+  // 아예 인식되지 않았습니다. 지금은 겹치지 않는 손 모양으로 옮겨 해결했고,
+  // 다시 겹치지 않도록 여기서 확인합니다.
+  for (const rule of GESTURE_RULES.filter((r) => r.category === 'word')) {
+    const hand = buildHandFromShape(rule.shape);
+    // 스마트 모드는 "기대 자모 + 단어"를 후보로 둡니다. 자음 차례와 모음
+    // 차례 양쪽에서 모두 인식되어야 언제 손을 들어도 동작합니다.
+    const onConsonantTurn = classifyHand(hand, ['consonant', 'word']).label;
+    const onVowelTurn = classifyHand(hand, ['vowel', 'word']).label;
+    check(
+      `단어 "${rule.label}" 가 스마트 모드 양쪽 차례에서 인식됨`,
+      onConsonantTurn === rule.label && onVowelTurn === rule.label,
+      true,
+    );
+  }
+
   // 사전 필터가 실제로 후보를 좁히는지
   const aRule = GESTURE_RULES.find((r) => r.label === 'ㅏ')!;
   const aHand = buildHandFromShape(aRule.shape);
@@ -479,6 +500,115 @@ section('5. 손 모양 데이터 (사전 페이지에 필요)');
     ...effects.map((e) => e.hint + e.label),
   ].filter((text) => emojiPattern.test(text));
   check('안내 문구에 이모지가 없음', withEmoji.length, 0);
+}
+
+// =============================================================================
+// 6. 수어 배우기 모드
+// =============================================================================
+section('6. 수어 배우기 모드 (커리큘럼 + 코치)');
+{
+  // --- 커리큘럼 무결성 ---
+  // 레슨이 존재하지 않는 글자를 가리키면 연습 화면이 빈 채로 뜹니다.
+  const allLabels = new Set(GESTURE_RULES.map((r) => r.label));
+  const brokenTargets: string[] = [];
+  for (const lesson of LESSONS) {
+    for (const t of lesson.targets) {
+      if (!allLabels.has(t)) brokenTargets.push(`${lesson.id}:${t}`);
+    }
+  }
+  check(
+    '모든 레슨이 실제로 존재하는 글자를 가리킴' +
+      (brokenTargets.length ? ` (깨짐: ${brokenTargets.join(', ')})` : ''),
+    brokenTargets.length,
+    0,
+  );
+
+  // 첫 레슨은 반드시 읽기 전용이어야 합니다. 수어를 모르는 사람이 열자마자
+  // 손 모양 연습부터 만나면 막힙니다.
+  checkTrue('첫 레슨은 설명부터 시작함', LESSONS[0].targets.length === 0);
+  checkTrue('첫 레슨에 설명 글이 있음', Boolean(LESSONS[0].intro));
+
+  // 연습 레슨에는 요령이나 설명이 있어야 합니다.
+  const practiceWithoutGuide = LESSONS.filter(
+    (l) => l.targets.length > 0 && !l.tip && !l.intro,
+  );
+  check('모든 연습 레슨에 안내(요령 또는 설명)가 있음', practiceWithoutGuide.length, 0);
+
+  // 자료로 확인된 ㅎ 가 첫 연습이어야 합니다(가장 믿을 수 있는 것부터).
+  const firstPractice = LESSONS.find((l) => l.targets.length > 0);
+  check('첫 연습 글자는 자료로 확인된 ㅎ', firstPractice?.targets[0], 'ㅎ');
+
+  checkTrue('연습 단계가 20개 이상', totalPracticeSteps() >= 20);
+
+  // --- 코치가 올바른 손을 통과시키는지 ---
+  const coach = new CoachService();
+  coach.setTarget('ㅎ');
+  const hieutRule = GESTURE_RULES.find((r) => r.label === 'ㅎ')!;
+  const correctHand = buildHandFromShape(hieutRule.shape);
+
+  // 0.9초를 유지해야 통과합니다. 0.1초씩 12번이면 충분합니다.
+  let passed = false;
+  for (let i = 0; i < 12; i++) {
+    passed = coach.update([correctHand], 0.1).passed;
+  }
+  checkTrue('올바른 손 모양을 유지하면 통과함', passed);
+
+  // --- 한 프레임만으로는 통과하지 않아야 합니다 ---
+  const quick = new CoachService();
+  quick.setTarget('ㅎ');
+  checkTrue(
+    '한 프레임만으로는 통과하지 않음 (유지 시간 필요)',
+    !quick.update([correctHand], 0.1).passed,
+  );
+
+  // --- 손이 없을 때 안내 ---
+  const idle = new CoachService();
+  idle.setTarget('ㅎ');
+  const noHand = idle.update([], 0.1);
+  checkTrue('손이 없으면 손을 보여달라고 안내함', noHand.hint.includes('손'));
+  checkTrue(
+    '손이 없으면 손가락 상태를 "모름"으로 표시함',
+    noHand.fingers.thumb === 'unknown' && noHand.fingers.pinky === 'unknown',
+  );
+
+  // --- 구체적인 교정 안내를 주는지 (배우기 모드의 핵심) ---
+  //
+  // ㅎ(엄지만 펴기) 를 연습하는데 주먹을 쥐고 있으면
+  // "엄지를 펴세요" 라고 콕 집어줘야 합니다.
+  const wrongCoach = new CoachService();
+  wrongCoach.setTarget('ㅎ');
+  const fistShape = {
+    fingers: { thumb: false, index: false, middle: false, ring: false, pinky: false },
+  };
+  const fistHand = buildHandFromShape(fistShape);
+  const wrongFeedback = wrongCoach.update([fistHand], 0.1);
+  checkTrue(
+    `엄지를 펴야 한다고 콕 집어 알려줌 ("${wrongFeedback.hint}")`,
+    wrongFeedback.hint.includes('엄지') && wrongFeedback.hint.includes('펴'),
+  );
+  check('엄지 상태가 "펴야 함"으로 표시됨', wrongFeedback.fingers.thumb, 'should-extend');
+
+  // 반대로, 접어야 하는데 펴져 있으면 접으라고 해야 합니다.
+  const curlCoach = new CoachService();
+  curlCoach.setTarget('ㅎ');
+  const openHandShape = {
+    fingers: { thumb: true, index: true, middle: true, ring: true, pinky: true },
+  };
+  const openFeedback = curlCoach.update([buildHandFromShape(openHandShape)], 0.1);
+  checkTrue(
+    `접어야 할 손가락을 알려줌 ("${openFeedback.hint}")`,
+    openFeedback.hint.includes('접'),
+  );
+
+  // --- 목표를 바꾸면 진행 상태가 초기화되는지 ---
+  const switchCoach = new CoachService();
+  switchCoach.setTarget('ㅎ');
+  for (let i = 0; i < 12; i++) switchCoach.update([correctHand], 0.1);
+  switchCoach.setTarget('ㅏ');
+  checkTrue(
+    '다른 글자로 바꾸면 진행 상태가 초기화됨',
+    switchCoach.update([], 0.1).holdProgress === 0,
+  );
 }
 
 // =============================================================================

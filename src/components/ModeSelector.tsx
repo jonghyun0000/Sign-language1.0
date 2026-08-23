@@ -4,7 +4,7 @@
 // 버튼 색상에 맞춰 자동으로 색이 바뀝니다.
 
 import type { AppMode } from '../types';
-import { BookIcon, SparkleIcon, TranslateIcon } from './icons';
+import { BookIcon, GraduationIcon, SparkleIcon, TranslateIcon } from './icons';
 
 interface Props {
   mode: AppMode;
@@ -17,6 +17,12 @@ const MODES: Array<{
   desc: string;
   Icon: typeof TranslateIcon;
 }> = [
+  {
+    id: 'learn',
+    label: '배우기',
+    desc: '수어를 처음 접해도 순서대로 따라 배울 수 있습니다',
+    Icon: GraduationIcon,
+  },
   {
     id: 'translate',
     label: '수어 번역',

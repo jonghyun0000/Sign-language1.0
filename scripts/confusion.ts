@@ -178,8 +178,12 @@ function measure(
 ): Row {
   const hand = buildHandFromShape(rule.shape, jitter);
 
+  // 스마트 모드는 "기대하는 자모 종류 + 단어"를 후보로 둡니다.
+  // 단어가 자모와 충돌하면 여기서 바로 드러납니다.
   const pool = sameCategoryOnly
-    ? GESTURE_RULES.filter((r) => r.category === rule.category)
+    ? GESTURE_RULES.filter(
+        (r) => r.category === rule.category || r.category === 'word',
+      )
     : GESTURE_RULES;
 
   const scored = pool
@@ -271,7 +275,7 @@ const ideal = runMatrix(
 console.log('\n');
 const scoped = runMatrix(
   0,
-  '2. 카테고리 분리 (스마트 모드) — 자음은 자음끼리만 경쟁하는 실제 조건',
+  '2. 스마트 모드 (기대 자모 + 단어) — 앱의 기본 설정과 같은 조건',
   true,
 );
 
@@ -279,7 +283,7 @@ const scoped = runMatrix(
 console.log('\n');
 const noisy = runMatrix(
   0.012,
-  '3. 카테고리 분리 + 카메라 떨림(±0.012) — 실사용에 가장 가까운 조건',
+  '3. 스마트 모드 + 카메라 떨림(±0.012) — 실사용에 가장 가까운 조건',
   true,
 );
 
@@ -293,10 +297,10 @@ console.log(
   `전체 경쟁      : 오인식 ${ideal.fail}/${ideal.total}, 아슬아슬 ${ideal.risky}/${ideal.total}`,
 );
 console.log(
-  `카테고리 분리   : 오인식 ${scoped.fail}/${scoped.total}, 아슬아슬 ${scoped.risky}/${scoped.total}`,
+  `스마트 모드    : 오인식 ${scoped.fail}/${scoped.total}, 아슬아슬 ${scoped.risky}/${scoped.total}`,
 );
 console.log(
-  `분리 + 떨림    : 오인식 ${noisy.fail}/${noisy.total}, 아슬아슬 ${noisy.risky}/${noisy.total}`,
+  `스마트 + 떨림  : 오인식 ${noisy.fail}/${noisy.total}, 아슬아슬 ${noisy.risky}/${noisy.total}`,
 );
 console.log(
   '\n→ 이 차이가 "스마트 모드"가 선택 사항이 아니라 필수인 이유입니다.',

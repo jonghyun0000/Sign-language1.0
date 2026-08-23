@@ -207,3 +207,52 @@ export function QuestionIcon(props: IconProps) {
     </Svg>
   );
 }
+
+/** 🎓 → 수어 배우기 모드 (학사모) */
+export function GraduationIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M12 4 2 9l10 5 10-5-10-5Z" />
+      <path d="M6 11.5V16c0 1.5 3 3 6 3s6-1.5 6-3v-4.5" />
+    </Svg>
+  );
+}
+
+/** ✔ → 완료 표시 */
+export function CheckIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="m4 12.5 5 5L20 6.5" />
+    </Svg>
+  );
+}
+
+/** → 다음 단계 */
+export function ArrowRightIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M4 12h16" />
+      <path d="m14 6 6 6-6 6" />
+    </Svg>
+  );
+}
+
+/** ← 이전으로 */
+export function ArrowLeftIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M20 12H4" />
+      <path d="m10 6-6 6 6 6" />
+    </Svg>
+  );
+}
+
+/** 🔒 → 아직 잠긴 레슨 */
+export function LockIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <rect x="4" y="10" width="16" height="11" rx="2" />
+      <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+    </Svg>
+  );
+}
